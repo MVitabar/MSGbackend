@@ -21,7 +21,9 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe());
 
-  await app.listen(3000);
-  console.log('Chat App Backend is running on: http://localhost:3000');
+  // Usar puerto dinámico para Railway o puerto 3000 por defecto
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  console.log(`Chat App Backend is running on: http://localhost:${port}`);
 }
 bootstrap();
