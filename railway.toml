@@ -1,0 +1,13 @@
+{
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "bun install --frozen-lockfile && bun run build",
+    "startCommand": "bun run start:prod"
+  },
+  "deploy": {
+    "healthcheckPath": "/auth/health",
+    "healthcheckTimeout": 100,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  }
+}

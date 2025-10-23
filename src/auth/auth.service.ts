@@ -69,31 +69,43 @@ export class AuthService {
       throw new BadRequestException('Email or phone number is required');
     }
 
-    // Find user by email or phone
-    const whereConditions = [];
-    if (email) whereConditions.push({ email });
-    if (phone) whereConditions.push({ phone });
+    try {
+      // Find user by email or phone
+      const whereConditions = [];
+      if (email) whereConditions.push({ email });
+      if (phone) whereConditions.push({ phone });
 
-    const user = await this.prisma.user.findFirst({
-      where: {
-        OR: whereConditions,
-      },
-    });
+      const user = await this.prisma.user.findFirst({
+        where: {
+          OR: whereConditions,
+        },
+      });
 
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      if (!user) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const payload = { sub: user.id, username: user.username };
+      const token = this.jwtService.sign(payload);
+
+      return { access_token: token };
+    } catch (error) {
+      // Si es un error de conexión a DB, dar mensaje más específico
+      if (error.code === 'P1001') {
+        throw new BadRequestException('Database connection error. Please check DATABASE_URL configuration.');
+      }
+      if (error.code === 'P2002') {
+        throw new BadRequestException('Database constraint error. Please check your data.');
+      }
+      // Re-lanzar otros errores
+      throw error;
     }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    const payload = { sub: user.id, username: user.username };
-    const token = this.jwtService.sign(payload);
-
-    return { access_token: token };
   }
 
   async validateUser(userId: string) {

@@ -135,6 +135,177 @@ socket.on('new-message', (message) => {
 });
 ```
 
+## 🚀 Deployment en Railway con Bun
+
+### Configuración de Railway para Bun
+
+Railway ahora soporta Bun nativamente. Configura lo siguiente en tu proyecto de Railway:
+
+#### Variables de Entorno:
+- `DATABASE_URL`: URL de PostgreSQL proporcionada por Railway
+- `JWT_SECRET`: Clave secreta para JWT (cámbiala en producción)
+- `NODE_ENV`: `production`
+- `PORT`: Railway lo asigna automáticamente
+
+#### Comandos de Build:
+- **Package Manager**: `bun`
+- **Build Command**: `bun install --frozen-lockfile && bun run build`
+- **Start Command**: `bun run start:prod`
+
+### Instalación con Bun
+
+```bash
+# Instalar dependencias con Bun
+bun install
+
+# Generar cliente Prisma
+bun run prisma:generate
+
+# Aplicar migraciones
+bun run prisma:push
+
+# Desarrollo
+bun run start:dev
+
+# Build para producción
+bun run build
+
+# Producción
+bun run start:prod
+```
+
+### Scripts de Diagnóstico para Railway
+```bash
+# Verificación completa para Railway
+bun run test:railway
+
+# Setup completo para Railway
+bun run setup:railway
+
+# Verificar que el build funcione
+bun run verify:deployment
+
+# Diagnóstico completo
+bun run test:diagnostic
+
+# Probar base de datos
+bun run test:db
+
+# Verificar variables de entorno
+bun run test:env
+
+# Simular entorno de producción
+bun run test:production
+```
+
+### Comandos Útiles con Bun
+- `bun install` - Instalar dependencias (más rápido que npm)
+- `bun run build` - Build optimizado para producción
+- `bun run start:prod` - Iniciar aplicación compilada
+- `bun run prisma:generate` - Generar cliente Prisma
+- `bun run prisma:push` - Aplicar cambios a la base de datos
+
+## 🔧 Troubleshooting
+
+### Error 502 Bad Gateway
+
+Si recibes errores 502 en producción, las causas más comunes son:
+
+#### 1. **Problemas de conexión a la base de datos**
+- Verifica que `DATABASE_URL` esté configurada correctamente en Railway
+- Asegúrate de que la base de datos PostgreSQL esté creada y accesible
+- Usa el script de test: `node test-db.js`
+
+#### 2. **Endpoint esperando datos incorrectos**
+- Revisa que el endpoint `/auth/login` reciba `email` O `phone`, más `password`
+- Los campos son mutuamente exclusivos (usa uno u otro, no ambos)
+
+#### 3. **Errores internos no atrapados**
+- Cualquier excepción no manejada puede causar 502
+- Revisa los logs de Railway para ver el error exacto
+
+#### 4. **Problemas de build**
+- Paquetes nativos como `bcrypt` pueden fallar en Railway
+- Asegúrate de que el build complete correctamente
+### Scripts de diagnóstico
+
+#### Verificar variables de entorno:
+```bash
+bun run test:env
+```
+
+#### Probar conexión a la base de datos:
+```bash
+bun run test:db
+```
+
+#### Probar endpoints con diagnóstico completo:
+```bash
+node test-login-axios.js
+```
+
+#### Verificación completa para Railway:
+```bash
+bun run test:railway
+```
+
+#### Simular entorno de producción:
+```bash
+bun run test:production
+```
+
+### Logs de Railway
+
+Para ver los logs completos en Railway:
+1. Ve a tu proyecto en Railway
+2. Selecciona tu servicio
+3. Ve a la pestaña "Logs"
+4. Revisa tanto los logs de build como los de runtime
+
+### Endpoint de Health
+
+Para verificar que la aplicación funcione sin depender de la base de datos:
+```bash
+curl https://tu-app.railway.app/auth/health
+```
+
+Si `/health` responde correctamente pero `/auth/login` falla, el problema está en la lógica específica del login.
+
+### Problemas Comunes con Bun en Railway
+
+#### 1. **Build Command incorrecto**
+- ✅ **Correcto**: `bun run build`
+- ❌ **Incorrecto**: `npm run build`
+
+#### 2. **Start Command incorrecto**
+- ✅ **Correcto**: `bun run start:prod`
+- ❌ **Incorrecto**: `node dist/main.js` (esto no usa Bun)
+
+#### 3. **Variables de entorno no configuradas**
+- Asegúrate de que `DATABASE_URL` esté configurada en Railway
+- Verifica que `JWT_SECRET` esté configurada
+- Railway debe usar `bun` como Package Manager
+
+#### 4. **Prisma Client no generado**
+- El build debe incluir `prisma generate`
+- Verifica que el cliente Prisma esté en `node_modules/@prisma/client`
+
+### Comandos de Verificación Rápida
+
+```bash
+# Verificar que Bun funcione
+bun --version
+
+# Verificar que el build funcione
+bun run verify:deployment
+
+# Setup completo
+bun run setup:railway
+
+# Verificación completa de Railway
+bun run test:railway
+```
+
 ## 📱 **Ejemplos de uso**
 
 ### **Registro de usuario:**

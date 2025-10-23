@@ -8,22 +8,27 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
+    "start": "node dist/main.js",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "bun run dist/main.js",
+    "test:env": "bun run check-env.js",
+    "test:db": "bun run test-db.js",
+    "test:production": "bun run test-production.js",
+    "test:railway": "bun run check-railway.js",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:diagnostic": "bun run diagnostic.js && echo '\n🎯 Listo para Railway con Bun!'",
+    "setup:railway": "bun install && bun run prisma:generate && bun run prisma:push",
+    "verify:deployment": "bun run build && echo '✅ Build exitoso para Railway'",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:studio": "prisma studio",
     "prisma:reset": "prisma migrate reset --force",
-    "db:update": "npm run prisma:generate && npm run prisma:push",
-    "postinstall": ""
+    "db:update": "bun run prisma:generate && bun run prisma:push",
+    "postinstall": "prisma generate"
+  },
+  "engines": {
+    "node": "18.x"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -94,5 +99,4 @@
     "testEnvironment": "node"
   },
   "packageManager": "bun@1.3.1"
-
 }

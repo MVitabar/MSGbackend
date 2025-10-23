@@ -1,0 +1,15 @@
+[install]
+# Configuración de instalación con Bun
+registry = "https://registry.npmjs.org/"
+
+[install.cache]
+# Habilitar caché para instalaciones más rápidas
+enabled = true
+
+[test]
+# Configuración para tests
+coverage = false
+
+[build]
+# Configuración de build
+minify = false
