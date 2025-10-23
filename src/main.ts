@@ -8,14 +8,24 @@ async function bootstrap() {
   // Configurar CORS para permitir requests desde el frontend Flutter, desarrollo web y dispositivos móviles
   const isProduction = process.env.NODE_ENV === 'production';
   console.log(`Environment: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
-  // En tu main.ts o app.module.ts de NestJS
-app.enableCors({
-  origin: true, // Permite cualquier origen
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
-  credentials: true,
-  optionsSuccessStatus: 200
-});
+
+  // Configuración CORS más específica para desarrollo
+  const corsOrigins = isProduction
+    ? ['*'] // Permitir todos los orígenes en producción para apps móviles
+    : [
+        
+        /^https?:\/\/localhost:\d+$/, // Cualquier puerto localhost para desarrollo
+        /^https?:\/\/127\.0\.0\.1:\d+$/, // Cualquier puerto 127.0.0.1 para desarrollo
+        
+      ];
+
+  app.enableCors({
+    origin: corsOrigins,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
+    credentials: true,
+    optionsSuccessStatus: 200
+  });
 
   app.useGlobalPipes(new ValidationPipe());
 
