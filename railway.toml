@@ -1,7 +1,7 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "bun install --frozen-lockfile && bun run build"
-startCommand = "bun run start:prod"
+buildCommand = "npm install --frozen-lockfile && npm run build"
+startCommand = "npm run start:prod"
 
 [deploy]
 healthcheckPath = "/auth/health"

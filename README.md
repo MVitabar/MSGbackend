@@ -135,11 +135,38 @@ socket.on('new-message', (message) => {
 });
 ```
 
-## 🚀 Deployment en Railway con Bun
+## ⚠️ **IMPORTANTE: Migración de Bun a Node.js**
 
-### Configuración de Railway para Bun
+**Por problemas de compatibilidad y estabilidad en Railway**, este proyecto ha sido migrado de Bun a Node.js.
 
-Railway ahora soporta Bun nativamente. Configura lo siguiente en tu proyecto de Railway:
+### **Razones de la migración:**
+- ✅ **Estabilidad:** Node.js es más maduro y estable en plataformas de hosting
+- ✅ **Compatibilidad:** Mejor soporte para todos los paquetes npm (Prisma, bcrypt, etc.)
+- ✅ **Soporte oficial:** Railway y otros hosts soportan Node.js de forma nativa
+- ✅ **Menos errores 502:** Node.js reduce problemas de deployment en producción
+
+### **¿Por qué Bun causaba problemas?**
+- 🚫 **Compatibilidad limitada:** Algunos paquetes no funcionan perfectamente con Bun
+- 🚫 **Errores de parsing:** Problemas con archivos de configuración TOML/JSON
+- 🚫 **Soporte limitado:** Railway no siempre detecta correctamente los comandos de Bun
+- 🚫 **Debugging complejo:** Más difícil diagnosticar problemas en producción
+
+### **¿Qué cambió?**
+- ✅ Scripts de `package.json` usan `npm` en lugar de `bun`
+- ✅ `railway.toml` configurado para `npm` en lugar de `bun`
+- ✅ Scripts de diagnóstico actualizados para Node.js
+- ✅ Eliminación de archivos de configuración específicos de Bun
+
+### **Comandos actualizados:**
+```bash
+# Antes (Bun) ❌
+bun run test:env
+bun run build
+
+# Ahora (Node.js) ✅
+npm run test:env
+npm run build
+```
 
 #### Variables de Entorno:
 - `DATABASE_URL`: URL de PostgreSQL proporcionada por Railway
@@ -148,62 +175,62 @@ Railway ahora soporta Bun nativamente. Configura lo siguiente en tu proyecto de 
 - `PORT`: Railway lo asigna automáticamente
 
 #### Comandos de Build:
-- **Package Manager**: `bun`
-- **Build Command**: `bun install --frozen-lockfile && bun run build`
-- **Start Command**: `bun run start:prod`
+- **Package Manager**: `npm`
+- **Build Command**: `npm install --frozen-lockfile && npm run build`
+- **Start Command**: `npm run start:prod`
 
-### Instalación con Bun
+### Instalación con npm
 
 ```bash
-# Instalar dependencias con Bun
-bun install
+# Instalar dependencias con npm
+npm install
 
 # Generar cliente Prisma
-bun run prisma:generate
+npm run prisma:generate
 
 # Aplicar migraciones
-bun run prisma:push
+npm run prisma:push
 
 # Desarrollo
-bun run start:dev
+npm run start:dev
 
 # Build para producción
-bun run build
+npm run build
 
 # Producción
-bun run start:prod
+npm run start:prod
 ```
 
 ### Scripts de Diagnóstico para Railway
 ```bash
 # Verificación completa para Railway
-bun run test:railway
+npm run test:railway
 
 # Setup completo para Railway
-bun run setup:railway
+npm run setup:railway
 
 # Verificar que el build funcione
-bun run verify:deployment
+npm run verify:deployment
 
 # Diagnóstico completo
-bun run test:diagnostic
+npm run test:diagnostic
 
 # Probar base de datos
-bun run test:db
+npm run test:db
 
 # Verificar variables de entorno
-bun run test:env
+npm run test:env
 
 # Simular entorno de producción
-bun run test:production
+npm run test:production
 ```
 
-### Comandos Útiles con Bun
-- `bun install` - Instalar dependencias (más rápido que npm)
-- `bun run build` - Build optimizado para producción
-- `bun run start:prod` - Iniciar aplicación compilada
-- `bun run prisma:generate` - Generar cliente Prisma
-- `bun run prisma:push` - Aplicar cambios a la base de datos
+### Comandos Útiles con npm
+- `npm install` - Instalar dependencias (compatible con Railway)
+- `npm run build` - Build para producción
+- `npm run start:prod` - Iniciar aplicación compilada
+- `npm run prisma:generate` - Generar cliente Prisma
+- `npm run prisma:push` - Aplicar cambios a la base de datos
 
 ## 🔧 Troubleshooting
 
@@ -231,12 +258,12 @@ Si recibes errores 502 en producción, las causas más comunes son:
 
 #### Verificar variables de entorno:
 ```bash
-bun run test:env
+npm run test:env
 ```
 
 #### Probar conexión a la base de datos:
 ```bash
-bun run test:db
+npm run test:db
 ```
 
 #### Probar endpoints con diagnóstico completo:
@@ -244,14 +271,14 @@ bun run test:db
 node test-login-axios.js
 ```
 
-#### Verificación completa para Railway:
-```bash
-bun run test:railway
-```
-
 #### Simular entorno de producción:
 ```bash
-bun run test:production
+npm run test:production
+```
+
+#### Verificación completa para Railway:
+```bash
+npm run test:railway
 ```
 
 ### Logs de Railway
@@ -271,20 +298,20 @@ curl https://tu-app.railway.app/auth/health
 
 Si `/health` responde correctamente pero `/auth/login` falla, el problema está en la lógica específica del login.
 
-### Problemas Comunes con Bun en Railway
+### Problemas Comunes con Node.js en Railway
 
 #### 1. **Build Command incorrecto**
-- ✅ **Correcto**: `bun run build`
-- ❌ **Incorrecto**: `npm run build`
+- ✅ **Correcto**: `npm install --frozen-lockfile && npm run build`
+- ❌ **Incorrecto**: `npm install` (sin lockfile)
 
 #### 2. **Start Command incorrecto**
-- ✅ **Correcto**: `bun run start:prod`
-- ❌ **Incorrecto**: `node dist/main.js` (esto no usa Bun)
+- ✅ **Correcto**: `npm run start:prod`
+- ❌ **Incorrecto**: `node dist/main.js` (sin usar npm scripts)
 
 #### 3. **Variables de entorno no configuradas**
 - Asegúrate de que `DATABASE_URL` esté configurada en Railway
 - Verifica que `JWT_SECRET` esté configurada
-- Railway debe usar `bun` como Package Manager
+- Railway debe usar `npm` como Package Manager
 
 #### 4. **Prisma Client no generado**
 - El build debe incluir `prisma generate`
@@ -293,17 +320,17 @@ Si `/health` responde correctamente pero `/auth/login` falla, el problema está 
 ### Comandos de Verificación Rápida
 
 ```bash
-# Verificar que Bun funcione
-bun --version
+# Verificar que Node.js funcione
+node --version
 
 # Verificar que el build funcione
-bun run verify:deployment
+npm run verify:deployment
 
 # Setup completo
-bun run setup:railway
+npm run setup:railway
 
 # Verificación completa de Railway
-bun run test:railway
+npm run test:railway
 ```
 
 ## 📱 **Ejemplos de uso**
