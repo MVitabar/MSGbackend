@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Param, Query, UseGuards, Request } from '@
 import { MessagesService } from './messages.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { EventsService } from '../common/events.service';
+import { ChatsService } from '../chats/chats.service';
 
 @Controller('messages')
 @UseGuards(JwtAuthGuard)
@@ -9,6 +10,7 @@ export class MessagesController {
   constructor(
     private readonly messagesService: MessagesService,
     private readonly eventsService: EventsService,
+    private readonly chatsService: ChatsService,
   ) {}
 
   @Post()
@@ -38,6 +40,14 @@ export class MessagesController {
     );
 
     console.log('✅ Message saved with ID:', message.id);
+
+    // CRITICAL: Get chat participants for socket emission (como en tu ejemplo)
+    const chat = await this.chatsService.getChatById(body.chatId, req.user.id);
+    if (!chat) {
+      throw new Error('Chat not found');
+    }
+
+    console.log('📡 Emitting newMessage to chat participants:', chat.users?.length || 0);
 
     // CRITICAL: Emit to ALL users in the chat (including sender)
     console.log('📡 Emitting newMessage to chat participants:', body.chatId);
