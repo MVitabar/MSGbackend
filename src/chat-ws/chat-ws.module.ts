@@ -4,8 +4,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
 import { ChatsModule } from '../chats/chats.module';
 import { MessagesModule } from '../messages/messages.module';
+import { UsersModule } from '../users/users.module';
+import { CommonModule } from '../common/common.module';
 import { ChatGateway } from './chat.gateway';
-import { UsersModule } from 'src/users/users.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { UsersModule } from 'src/users/users.module';
     ChatsModule,
     MessagesModule,
     UsersModule,
+    CommonModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

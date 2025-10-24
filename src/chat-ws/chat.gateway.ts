@@ -13,7 +13,8 @@ import { Socket } from 'socket.io';
 import { ChatsService } from '../chats/chats.service';
 import { MessagesService } from '../messages/messages.service';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from 'src/users/users.service';
+import { EventsService } from '../common/events.service';
+import { UsersService } from '../users/users.service';
 
 @WebSocketGateway({
   cors: {
@@ -28,9 +29,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     private messagesService: MessagesService,
     private jwtService: JwtService,
     private usersService: UsersService,
+    private eventsService: EventsService,
   ) {}
 
   afterInit(server: Server) {
+    // Listen for message events from REST API
+    this.eventsService.getEventEmitter().on('message.sent', (data: { chatId: string, message: any }) => {
+      console.log('📨 Processing message event for chat:', data.chatId);
+      this.server.to(`chat:${data.chatId}`).emit('newMessage', data.message);
+      console.log('✅ newMessage emitted via WebSocket for chat:', data.chatId);
+    });
+
     // Debug logging for all socket events
     server.on('connection', (socket: Socket) => {
       console.log(`🔗 User connected: ${socket.id}`);

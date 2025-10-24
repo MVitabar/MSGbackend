@@ -1,11 +1,15 @@
 import { Controller, Get, Post, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { EventsService } from '../common/events.service';
 
 @Controller('messages')
 @UseGuards(JwtAuthGuard)
 export class MessagesController {
-  constructor(private readonly messagesService: MessagesService) {}
+  constructor(
+    private readonly messagesService: MessagesService,
+    private readonly eventsService: EventsService,
+  ) {}
 
   @Post()
   async createMessage(
@@ -34,7 +38,10 @@ export class MessagesController {
     );
 
     console.log('✅ Message saved with ID:', message.id);
-    console.log('💡 Use WebSocket send-message event to emit real-time updates');
+
+    // CRITICAL: Emit to ALL users in the chat (including sender)
+    this.eventsService.emitMessageSent(body.chatId, message);
+    console.log('✅ newMessage event will be processed by WebSocket gateway');
 
     return message;
   }
