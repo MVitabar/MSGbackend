@@ -5,6 +5,7 @@ import {
   ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  OnGatewayInit,
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
@@ -19,7 +20,7 @@ import { UsersService } from 'src/users/users.service';
     origin: '*',
   },
 })
-export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit {
   @WebSocketServer()
   server: Server;
   constructor(
@@ -28,6 +29,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private jwtService: JwtService,
     private usersService: UsersService,
   ) {}
+
+  afterInit(server: Server) {
+    // Debug logging for all socket events
+    server.on('connection', (socket: Socket) => {
+      console.log(`🔗 User connected: ${socket.id}`);
+
+      socket.onAny((eventName, data) => {
+        console.log(`🔄 Socket ${eventName}:`, data);
+      });
+    });
+  }
 
   private connectedUsers = new Map<string, Socket>();
 
@@ -98,7 +110,35 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() socket: Socket,
   ) {
     socket.join(`chat:${data.chatId}`);
+
+    // Find user ID from connected users
+    let userId: string | undefined;
+    for (const [uid, userSocket] of this.connectedUsers.entries()) {
+      if (userSocket.id === socket.id) {
+        userId = uid;
+        break;
+      }
+    }
+
+    if (userId) {
+      socket.join(`user:${userId}`);
+    }
+
     console.log(`User joined chat: ${data.chatId}`);
+
+    // Send recent messages when user joins chat
+    if (userId) {
+      try {
+        const messages = await this.messagesService.getChatMessages(data.chatId, userId, 1, 50);
+
+        if (messages.length > 0) {
+          console.log(`📨 Sending ${messages.length} recent messages to user ${userId}`);
+          socket.emit('recentMessages', { chatId: data.chatId, messages: messages.reverse() });
+        }
+      } catch (error) {
+        console.error('Error sending recent messages:', error);
+      }
+    }
   }
 
   @SubscribeMessage('leave-chat')

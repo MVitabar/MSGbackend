@@ -20,7 +20,9 @@ export class MessagesController {
     },
     @Request() req,
   ) {
-    return this.messagesService.createMessage(
+    console.log('💬 Saving message to database:', { chatId: body.chatId, content: body.content, userId: req.user.id });
+
+    const message = await this.messagesService.createMessage(
       body.content,
       body.type || 'text',
       req.user.id,
@@ -30,6 +32,11 @@ export class MessagesController {
       body.fileSize,
       body.replyToId,
     );
+
+    console.log('✅ Message saved with ID:', message.id);
+    console.log('✅ newMessage event will be emitted by WebSocket gateway');
+
+    return message;
   }
 
   @Get(':chatId')
