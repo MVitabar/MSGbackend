@@ -1,14 +1,14 @@
 import { Controller, Get, Post, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { EventsService } from '../common/events.service';
+import { WebSocketEmitterService } from '../common/websocket-emitter.service';
 
 @Controller('messages')
 @UseGuards(JwtAuthGuard)
 export class MessagesController {
   constructor(
     private readonly messagesService: MessagesService,
-    private readonly eventsService: EventsService,
+    private readonly websocketEmitter: WebSocketEmitterService,
   ) {}
 
   @Post()
@@ -40,8 +40,9 @@ export class MessagesController {
     console.log('✅ Message saved with ID:', message.id);
 
     // CRITICAL: Emit to ALL users in the chat (including sender)
-    this.eventsService.emitMessageSent(body.chatId, message);
-    console.log('✅ newMessage event will be processed by WebSocket gateway');
+    console.log('📡 Emitting newMessage to chat participants:', body.chatId);
+    this.websocketEmitter.emitToChat(body.chatId, 'newMessage', message);
+    console.log('✅ newMessage event emitted to chat:', body.chatId);
 
     return message;
   }
