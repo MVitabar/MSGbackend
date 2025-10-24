@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards, Put, Body, Request } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -32,8 +32,11 @@ export class UsersController {
     return this.usersService.findByPhone(phone);
   }
 
-  @Get('search')
-  async search(@Query('q') query: string) {
-    return this.usersService.searchUsers(query);
+  @Put('status')
+  async updateStatus(@Body() data: { status: string }, @Request() req: any) {
+    const userId = req.user.id || req.user.sub;
+    return this.usersService.updateStatus(userId, data.status);
+
   }
+  
 }

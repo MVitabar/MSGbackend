@@ -5,11 +5,14 @@ import {
   ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  WebSocketServer,
 } from '@nestjs/websockets';
+import { Server } from 'socket.io';
 import { Socket } from 'socket.io';
 import { ChatsService } from '../chats/chats.service';
 import { MessagesService } from '../messages/messages.service';
 import { JwtService } from '@nestjs/jwt';
+import { UsersService } from 'src/users/users.service';
 
 @WebSocketGateway({
   cors: {
@@ -17,10 +20,13 @@ import { JwtService } from '@nestjs/jwt';
   },
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  @WebSocketServer()
+  server: Server;
   constructor(
     private chatsService: ChatsService,
     private messagesService: MessagesService,
     private jwtService: JwtService,
+    private usersService: UsersService,
   ) {}
 
   private connectedUsers = new Map<string, Socket>();
@@ -46,6 +52,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.connectedUsers.set(userId, socket);
       socket.join(`user:${userId}`);
 
+      // Update user status to online
+      await this.usersService.updateStatus(userId, 'online');
+
+      // Notify all users about status change
+      socket.broadcast.emit('userStatusChanged', {
+        userId,
+        status: 'online',
+        timestamp: new Date().toISOString(),
+      });
+
       console.log(`User ${userId} connected`);
 
     } catch (error) {
@@ -59,6 +75,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     for (const [userId, userSocket] of this.connectedUsers.entries()) {
       if (userSocket.id === socket.id) {
         this.connectedUsers.delete(userId);
+
+        // Update user status to offline
+        this.usersService.updateStatus(userId, 'offline');
+
+        // Notify all users about status change
+        socket.broadcast.emit('userStatusChanged', {
+          userId,
+          status: 'offline',
+          timestamp: new Date().toISOString(),
+        });
+
         console.log(`User ${userId} disconnected`);
         break;
       }
@@ -119,8 +146,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       data.fileSize,
     );
 
-    // Emit message to all users in the chat
-    socket.to(`chat:${data.chatId}`).emit('new-message', message);
+    // Emit message to all users in the chat (including sender)
+    this.server.to(`chat:${data.chatId}`).emit('newMessage', message);
 
     return message;
   }
