@@ -54,6 +54,15 @@ export class MessagesController {
     this.eventsService.emitMessageSent(body.chatId, message);
     console.log('✅ newMessage event emitted to chat:', body.chatId);
 
+    // Additional debugging
+    console.log('🔍 Message details:', {
+      id: message.id,
+      chatId: message.chatId,
+      content: message.content,
+      senderId: message.senderId,
+      timestamp: message.createdAt
+    });
+
     return message;
   }
 

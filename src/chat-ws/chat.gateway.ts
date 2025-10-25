@@ -38,6 +38,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     // Configure WebSocketEmitterService with the server instance
     this.websocketEmitter.setSocketServer(server);
 
+    // Configure EventsService with the server instance for direct emission
+    this.eventsService.setSocketServer(server);
+
     // Listen for message events from REST API
     this.eventsService.getEventEmitter().on('message.sent', (data: { chatId: string, message: any }) => {
       console.log('📨 Processing message event for chat:', data.chatId);
